@@ -1,6 +1,6 @@
 use std::io::{self};
 use std::process::Command;
-use crossterm::terminal::{disable_raw_mode, Clear};
+use crossterm::terminal::{disable_raw_mode};
 use tui::backend::{CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout};
 use tui::style::{Color, Style};
@@ -35,9 +35,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = String::new();
     loop {
 
-        let input_paragraph = Paragraph::new(buffer.as_ref())
+        let input_paragraph = Paragraph::new(format!("{}{}","~>",buffer.as_str()))
             .style(Style::default().fg(Color::White))
-            .block(Block::default().borders(Borders::ALL).title("Input"));
+            .block(Block::default().borders(Borders::NONE));
         let history_items = history
             .iter()
             .filter(|cmd| cmd.contains(&buffer))
@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .block(Block::default().borders(Borders::ALL).title("History"));
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Min(3), Constraint::Percentage(90)].as_ref())
+            .constraints([Constraint::Min(1), Constraint::Percentage(90)].as_ref())
             .split(terminal.size()?);
         terminal.draw(|f| {
             f.render_widget(input_paragraph, layout[0]);
