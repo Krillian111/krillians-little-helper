@@ -1,6 +1,7 @@
-use std::io::{self};
-use std::process::Command;
+use std::fs::File;
+use std::io::{self, BufRead};
 use crossterm::terminal::{disable_raw_mode};
+use dirs::home_dir;
 use tui::backend::{CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout};
 use tui::style::{Color, Style};
@@ -23,11 +24,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    let history_output = Command::new("ls")
-    .output()
-    .expect("failed to get history");
-    let history = String::from_utf8_lossy(&history_output.stdout)
-            .split('\n')
+    // let history_output = Command::new("history")
+    // .output()
+    // .expect("failed to get history");
+    let history = read_history()
+            .iter() 
             .map(|line| line.trim().to_string())
             .filter(|line| !line.is_empty())
             .collect::<Vec<String>>();
@@ -40,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .block(Block::default().borders(Borders::NONE));
         let history_items = history
             .iter()
-            .filter(|cmd| cmd.contains(&buffer))
+            .filter(|cmd| cmd.to_lowercase().contains(&buffer.to_lowercase()))
             .map(|cmd| ListItem::new(cmd.as_str()))
             .collect::<Vec<ListItem>>();
         let history_list = List::new(history_items)
@@ -70,4 +71,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
     return Ok(());
+}
+
+
+fn read_history() -> Vec<String> {
+    let mut history: Vec<String> = vec!();
+    let history_file_path = home_dir().expect("Failed to get home dir!").join(".zsh_history");
+    let file = File::open(history_file_path).expect("Couldn't open history");
+    let reader = io::BufReader::new(file);
+    for line in reader.lines() {
+        match line {
+            Ok(line) => {
+                let cmd = line.split(";").last().expect(
+                    format!("Line '{}' didn't contain command", line).as_str()
+                );
+                history.push(cmd.to_string());
+            }
+            Err(err) => {
+                eprintln!("Error reading history at line: {}", err);
+            }
+        }
+    }
+    return history;
 }
