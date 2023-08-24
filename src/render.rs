@@ -1,17 +1,19 @@
 use std::io::Stdout;
 
-
 use crossterm::{
     event::{read, Event, KeyCode, KeyModifiers},
-    Result
+    Result,
 };
 use tui::backend::CrosstermBackend;
 use tui::layout::{Constraint, Direction, Layout};
 use tui::style::{Color, Style};
-use tui::Terminal;
 use tui::widgets::{Block, Borders, List, ListItem, Paragraph};
+use tui::Terminal;
 
-pub fn render(terminal: &mut Terminal<CrosstermBackend<Stdout>>, history: &Vec<String>) -> Result<()> {
+pub fn render(
+    terminal: &mut Terminal<CrosstermBackend<Stdout>>,
+    history: &Vec<String>,
+) -> Result<()> {
     let mut buffer = String::new();
     loop {
         let input_paragraph = Paragraph::new(format!("{}{}", "~>", buffer.as_str()))
